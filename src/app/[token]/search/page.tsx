@@ -1,6 +1,7 @@
 import SearchForm from '@/components/search/SearchForm';
 import SearchResults from '@/components/search/SearchResults';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileText } from 'lucide-react';
 
 interface SearchPageProps {
   searchParams: {
@@ -13,25 +14,35 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
   const { q, filter } = searchParams;
   
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Manuals Suchportal</CardTitle>
-          <CardDescription>
-            Suchen Sie nach Handbüchern und Dokumentationen
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SearchForm initialQuery={q || ''} />
-        </CardContent>
-      </Card>
+    <div className="container mx-auto py-6 px-4">
+      <div className="search-header text-center mb-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center mb-2">
+            <FileText className="h-8 w-8 mr-2" />
+            <h1 className="text-2xl font-bold">Manuals Suchportal</h1>
+          </div>
+          <p>Suchen Sie nach Handbüchern und Dokumentationen</p>
+        </div>
+      </div>
       
-      {q && <SearchResults query={q} filter={filter} />}
+      <div className="search-form-container">
+        <SearchForm initialQuery={q || ''} />
+      </div>
+      
+      {q && (
+        <div className="results-container">
+          <SearchResults query={q} filter={filter} />
+        </div>
+      )}
       
       {!q && (
-        <div className="text-center py-8 text-muted-foreground">
-          Geben Sie einen Suchbegriff ein, um Handbücher zu finden.
-        </div>
+        <Card className="text-center py-8">
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">
+              Geben Sie einen Suchbegriff ein, um Handbücher zu finden.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
