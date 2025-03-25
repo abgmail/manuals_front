@@ -5,51 +5,78 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Copy, Download, FileText, AlertCircle, Clock, Search, ExternalLink } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Copy, Download, FileText, AlertCircle, Clock, Search, ExternalLink, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface SearchResultsProps {
   query: string;
   filter?: string;
 }
 
-export default function SearchResults({ query, filter }: SearchResultsProps) {
-  const [results, setResults] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Funktion zum Formatieren des Datums in deutsches Format (TT.MM.YYYY)
+function formatDate(dateString: string): string {
+  if (!dateString) return '-';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    // Fallback für den Fall, dass das Datum nicht geparst werden kann
+    return dateString;
+  }
+}
 
+export default function SearchResults({ query, filter }: SearchResultsProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [results, setResults] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [totalHits, setTotalHits] = useState(0);
+
+  // Suche ausführen, wenn die Komponente geladen wird
   useEffect(() => {
     const fetchResults = async () => {
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        setLoading(true);
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}${filter ? `&filter=${encodeURIComponent(filter)}` : ''}`);
+        const params = new URLSearchParams();
+        params.append('q', query);
+        if (filter) {
+          params.append('filter', filter);
+        }
+        
+        const response = await fetch(`/api/search?${params.toString()}`);
         
         if (!response.ok) {
-          throw new Error('Fehler bei der Suche');
+          throw new Error(`Fehler bei der Suche: ${response.statusText}`);
         }
         
         const data = await response.json();
-        setResults(data);
-        setError(null);
+        setResults(data.hits || []);
+        setTotalHits(data.totalHits || 0);
       } catch (err) {
-        console.error('Fehler bei der Suche:', err);
-        setError('Bei der Suche ist ein Fehler aufgetreten');
+        setError(err instanceof Error ? err.message : 'Unbekannter Fehler bei der Suche');
+        setResults([]);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
+    
     if (query) {
       fetchResults();
     }
   }, [query, filter]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Suchergebnisse werden geladen...</p>
+        <div className="flex flex-col items-center gap-2">
+          <Clock className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground">Suche läuft...</p>
         </div>
       </div>
     );
@@ -64,37 +91,24 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
     );
   }
 
-  if (!results || results.hits.length === 0) {
+  if (results.length === 0) {
     return (
-      <Card className="my-4 border-none shadow-none">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Search className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Keine Ergebnisse gefunden</h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            Keine Ergebnisse gefunden für &quot;{query}&quot;. Bitte versuchen Sie eine andere Suchanfrage oder prüfen Sie die Schreibweise.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-12">
+        <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">Keine Ergebnisse gefunden</h3>
+        <p className="text-muted-foreground">
+          Versuchen Sie es mit einem anderen Suchbegriff oder weniger Filtern.
+        </p>
+      </div>
     );
   }
-  
+
   return (
-    <div className="space-y-6">
-      <div className="results-header">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-sm">
-            {results.hits.length}
-          </span>
-          Ergebnisse für &quot;{query}&quot;
-        </h2>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>Suchdauer: {results.processingTimeMs}ms</span>
-        </div>
-      </div>
+    <div>
+      <h2 className="text-2xl font-bold mb-6">{totalHits} Ergebnisse für "{query}"</h2>
       
-      <div className="grid gap-4">
-        {results.hits.map((hit: any) => (
+      <div className="space-y-4">
+        {results.map((hit) => (
           <Card key={hit.document_id || hit.id || hit._id} className="overflow-hidden border border-muted">
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
               <div className="p-4">
@@ -103,13 +117,13 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
                   
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">Seite:</span> 
+                      <span className="text-muted-foreground">Seitenanzahl:</span> 
                       <span className="font-medium ml-1">{hit.page_number}</span>
                     </div>
                     
                     <div>
                       <span className="text-muted-foreground">Datum:</span> 
-                      <span className="font-medium ml-1">{hit.document_date}</span>
+                      <span className="font-medium ml-1">{formatDate(hit.document_date)}</span>
                     </div>
                     
                     <div className="col-span-2 md:col-span-1">
@@ -131,32 +145,20 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
               </div>
               
               <div className="bg-muted/30 p-4 flex flex-row md:flex-col justify-end gap-2 border-t md:border-t-0 md:border-l border-border">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Vorschau
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>{hit.filename}</DialogTitle>
-                      <DialogDescription>
-                        Seite {hit.page_number} | Datum: {hit.document_date}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="mt-4">
-                      <iframe 
-                        src={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/preview/${hit.filename}`} 
-                        className="w-full h-[70vh] border rounded"
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <a 
+                    href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Vorschau
+                  </a>
+                </Button>
                 
                 <Button variant="default" size="sm" className="w-full" asChild>
                   <a 
-                    href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/download/${hit.filename}`} 
+                    href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
                     download 
                     target="_blank" 
                     rel="noopener noreferrer"
@@ -167,7 +169,7 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
                 </Button>
                 
                 <CopyLinkButton 
-                  url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/download/${hit.filename}`} 
+                  url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
                 />
               </div>
             </div>
@@ -182,23 +184,27 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
 function CopyLinkButton({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
   
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(url).then(() => {
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch (err) {
+      console.error('Fehler beim Kopieren in die Zwischenablage:', err);
+    }
   };
   
   return (
     <Button 
-      variant="ghost" 
+      variant="outline" 
       size="sm" 
-      className="w-full"
+      className="w-full" 
       onClick={copyToClipboard}
     >
       {copied ? (
         <>
-          <span className="text-green-600 text-xs">Link kopiert!</span>
+          <Check className="h-4 w-4 mr-2 text-green-500" />
+          Kopiert
         </>
       ) : (
         <>

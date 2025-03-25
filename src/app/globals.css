@@ -180,3 +180,53 @@
     padding: 1rem 0;
   }
 }
+
+/* Sticky Header Styles */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 80px;
+  min-height: 80px;
+  max-height: 80px;
+  background-color: #e5e7eb !important; /* Entspricht Tailwind's gray-200 */
+  color: #1f2937 !important; /* Entspricht Tailwind's gray-800 */
+  z-index: 50;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo-container {
+  position: relative;
+  height: 60px;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.header-text {
+  padding-left: 10px;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: inherit;
+}
+
+.header-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  margin: 4px 0 0 0;
+}
