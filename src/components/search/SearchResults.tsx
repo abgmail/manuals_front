@@ -1,12 +1,11 @@
 "use client";
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Copy, Download, FileText, AlertCircle, Clock, Search } from 'lucide-react';
+import { Copy, Download, FileText, AlertCircle, Clock, Search, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface SearchResultsProps {
@@ -94,84 +93,96 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <Table className="results-table">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40%]">Dokument</TableHead>
-              <TableHead>Seite</TableHead>
-              <TableHead>Datum</TableHead>
-              <TableHead>SKUs</TableHead>
-              <TableHead className="text-right">Aktionen</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {results.hits.map((hit: any) => (
-              <TableRow key={hit.document_id || hit.id || hit._id} className="hover:bg-muted/50">
-                <TableCell className="font-medium">
-                  {hit.filename}
-                </TableCell>
-                <TableCell>{hit.page_number}</TableCell>
-                <TableCell>{hit.document_date}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {Array.isArray(hit.skus) ? hit.skus.map((sku: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {sku}
-                      </Badge>
-                    )) : (
-                      hit.skus && <Badge variant="outline" className="text-xs">{hit.skus}</Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="action-button">
-                          <FileText className="h-4 w-4" />
-                          <span className="sr-only md:not-sr-only md:inline-block">Vorschau</span>
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>{hit.filename}</DialogTitle>
-                          <DialogDescription>
-                            Seite {hit.page_number} | Datum: {hit.document_date}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="mt-4">
-                          <iframe 
-                            src={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/preview/${hit.filename}`} 
-                            className="w-full h-[70vh] border rounded"
-                          />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+      <div className="grid gap-4">
+        {results.hits.map((hit: any) => (
+          <Card key={hit.document_id || hit.id || hit._id} className="overflow-hidden border border-muted">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+              <div className="p-4">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-lg font-medium line-clamp-1">{hit.filename}</h3>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Seite:</span> 
+                      <span className="font-medium ml-1">{hit.page_number}</span>
+                    </div>
                     
-                    <DownloadButton 
-                      url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/download/${hit.filename}`} 
-                      filename={hit.filename} 
-                    />
+                    <div>
+                      <span className="text-muted-foreground">Datum:</span> 
+                      <span className="font-medium ml-1">{hit.document_date}</span>
+                    </div>
+                    
+                    <div className="col-span-2 md:col-span-1">
+                      <span className="text-muted-foreground">SKUs:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {Array.isArray(hit.skus) && hit.skus.length > 0 ? hit.skus.map((sku: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {sku}
+                          </Badge>
+                        )) : hit.skus ? (
+                          <Badge variant="outline" className="text-xs">{hit.skus}</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </div>
+              
+              <div className="bg-muted/30 p-4 flex flex-row md:flex-col justify-end gap-2 border-t md:border-t-0 md:border-l border-border">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Vorschau
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>{hit.filename}</DialogTitle>
+                      <DialogDescription>
+                        Seite {hit.page_number} | Datum: {hit.document_date}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                      <iframe 
+                        src={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/preview/${hit.filename}`} 
+                        className="w-full h-[70vh] border rounded"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Button variant="default" size="sm" className="w-full" asChild>
+                  <a 
+                    href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/download/${hit.filename}`} 
+                    download 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </a>
+                </Button>
+                
+                <CopyLinkButton 
+                  url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/download/${hit.filename}`} 
+                />
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   );
 }
 
-// Komponente für den Download-Button mit Kopier-Funktion
-function DownloadButton({ url, filename }: { url: string; filename: string }) {
+// Komponente für den Kopier-Button
+function CopyLinkButton({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
   
-  const copyToClipboard = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const copyToClipboard = () => {
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -179,29 +190,22 @@ function DownloadButton({ url, filename }: { url: string; filename: string }) {
   };
   
   return (
-    <div className="relative">
-      <Button variant="default" size="sm" asChild className="action-button">
-        <a href={url} download target="_blank" rel="noopener noreferrer">
-          <Download className="h-4 w-4" />
-          <span className="sr-only md:not-sr-only md:inline-block">Download</span>
-        </a>
-      </Button>
-      
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 bg-muted hover:bg-muted-foreground hover:text-muted"
-        onClick={copyToClipboard}
-      >
-        <Copy className="h-3 w-3" />
-        <span className="sr-only">Link kopieren</span>
-      </Button>
-      
-      {copied && (
-        <div className="absolute -top-8 right-0 bg-muted-foreground text-muted text-xs py-1 px-2 rounded">
-          Link kopiert!
-        </div>
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      className="w-full"
+      onClick={copyToClipboard}
+    >
+      {copied ? (
+        <>
+          <span className="text-green-600 text-xs">Link kopiert!</span>
+        </>
+      ) : (
+        <>
+          <Copy className="h-4 w-4 mr-2" />
+          Link kopieren
+        </>
       )}
-    </div>
+    </Button>
   );
 }
