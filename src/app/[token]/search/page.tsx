@@ -14,10 +14,6 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
   
   return (
     <div className="container mx-auto py-6 px-4">
-      <div className="search-form-container mb-8">
-        <SearchForm initialQuery={q || ''} />
-      </div>
-      
       {q && (
         <div className="results-container">
           <SearchResults query={q} filter={filter} />

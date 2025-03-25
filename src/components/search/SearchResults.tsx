@@ -104,76 +104,84 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">{results.length} Ergebnisse für "{query}"</h2>
+    <div className="results-container">
+      <div className="search-header">
+        <h1>{results.length} Ergebnisse für "{query}"</h1>
+        <p>Gefundene Dokumente, sortiert nach Datum (neueste zuerst)</p>
+      </div>
       
-      <div className="space-y-4">
+      <div className="results-grid">
         {results.map((hit) => (
-          <Card key={hit.document_id || hit.id || hit._id} className="overflow-hidden border border-muted">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
-              <div className="p-4">
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-lg font-medium line-clamp-1">{hit.filename}</h3>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Seitenanzahl:</span> 
-                      <span className="font-medium ml-1">{hit.page_number}</span>
-                    </div>
-                    
-                    <div>
-                      <span className="text-muted-foreground">Datum:</span> 
-                      <span className="font-medium ml-1">{formatDate(hit.document_date)}</span>
-                    </div>
-                    
-                    <div className="col-span-2 md:col-span-1">
-                      <span className="text-muted-foreground">SKUs:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {Array.isArray(hit.skus) && hit.skus.length > 0 ? hit.skus.map((sku: string, index: number) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {sku}
-                          </Badge>
-                        )) : hit.skus ? (
-                          <Badge variant="outline" className="text-xs">{hit.skus}</Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+          <div key={hit.document_id || hit.id || hit._id} className="result-card">
+            <div className="result-card-header">
+              <h3 className="result-card-title">{hit.filename}</h3>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Seiten:</span> 
+                  <span className="font-medium ml-1">{hit.page_number}</span>
+                </div>
+                
+                <div>
+                  <span className="text-muted-foreground">Datum:</span> 
+                  <span className="font-medium ml-1">{formatDate(hit.document_date)}</span>
                 </div>
               </div>
               
-              <div className="bg-muted/30 p-4 flex flex-row md:flex-col justify-end gap-2 border-t md:border-t-0 md:border-l border-border">
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <a 
-                    href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Vorschau
-                  </a>
-                </Button>
-                
-                <Button variant="default" size="sm" className="w-full" asChild>
-                  <a 
-                    href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
-                    download 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </a>
-                </Button>
-                
-                <CopyLinkButton 
-                  url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
-                />
+              <div className="result-card-meta">
+                {Array.isArray(hit.skus) && hit.skus.length > 0 ? hit.skus.map((sku: string, index: number) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {sku}
+                  </Badge>
+                )) : hit.skus ? (
+                  <Badge variant="outline" className="text-xs">{hit.skus}</Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">-</span>
+                )}
               </div>
             </div>
-          </Card>
+            
+            <div className="result-card-content">
+              {hit.tags && Array.isArray(hit.tags) && hit.tags.length > 0 && (
+                <div className="mb-2">
+                  {hit.tags.map((tag: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="mr-1 mb-1">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-muted/30 p-4 flex flex-row md:flex-col justify-end gap-2 border-t">
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2" asChild>
+                <a 
+                  href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Vorschau</span>
+                </a>
+              </Button>
+              
+              <Button variant="default" size="sm" className="w-full flex items-center gap-2" asChild>
+                <a 
+                  href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
+                  download 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </a>
+              </Button>
+              
+              <CopyLinkButton 
+                url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -198,18 +206,18 @@ function CopyLinkButton({ url }: { url: string }) {
     <Button 
       variant="outline" 
       size="sm" 
-      className="w-full" 
+      className="w-full flex items-center gap-2" 
       onClick={copyToClipboard}
     >
       {copied ? (
         <>
-          <Check className="h-4 w-4 mr-2 text-green-500" />
-          Kopiert
+          <Check className="h-4 w-4" />
+          <span>Kopiert</span>
         </>
       ) : (
         <>
-          <Copy className="h-4 w-4 mr-2" />
-          Link kopieren
+          <Copy className="h-4 w-4" />
+          <span>Link kopieren</span>
         </>
       )}
     </Button>
