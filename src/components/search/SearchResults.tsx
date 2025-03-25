@@ -105,7 +105,7 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">{totalHits} Ergebnisse für "{query}"</h2>
+      <h2 className="text-2xl font-bold mb-6">{results.length} Ergebnisse für "{query}"</h2>
       
       <div className="space-y-4">
         {results.map((hit) => (
