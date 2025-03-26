@@ -3,10 +3,11 @@
 import { useState, useCallback, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isIdentifierQuery } from '@/lib/meilisearch-api';
+import { Loader2 } from 'lucide-react';
 
 interface SearchFormProps {
   initialQuery: string;
@@ -19,6 +20,7 @@ export default function SearchForm({ initialQuery, compact = false }: SearchForm
   const [isIdentifier, setIsIdentifier] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   
   // Debounce-Funktion für die Identifikation des Suchtyps
   const checkQueryType = useCallback((value: string) => {
@@ -73,45 +75,95 @@ export default function SearchForm({ initialQuery, compact = false }: SearchForm
   };
   
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 ${compact ? 'compact-search' : ''}`}>
+    <form onSubmit={handleSubmit} className={`w-full ${compact ? 'max-w-full' : 'max-w-3xl mx-auto'}`}>
       <div className="relative">
-        <Search className="absolute top-1/2 transform -translate-y-1/2 left-3 h-5 w-5 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/60" />
         <Input
           type="text"
           placeholder="Suchen Sie nach Handbüchern und Dokumentationen"
           value={query}
           onChange={handleQueryChange}
-          className="pl-10 w-full"
+          className="pl-10 w-full h-14 text-base search-input rounded-lg border-input/50 focus:border-primary"
           disabled={isLoading}
           aria-label="Suchbegriff"
         />
         {isIdentifier !== null && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <Badge variant={isIdentifier ? "default" : "secondary"} className="text-xs font-medium">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Badge variant={isIdentifier ? "default" : "secondary"} className="text-xs badge">
               {isIdentifier ? "Artikelnummer" : "Freitext"}
             </Badge>
           </div>
         )}
       </div>
       
-      <div className={`flex items-center ${compact ? 'mt-2' : 'mt-4'} ${compact ? 'justify-end' : 'justify-between'}`}>
+      <div className={`flex items-center gap-2 mt-5 ${compact ? 'justify-end' : 'justify-between'}`}>
         {!compact && (
-          <Button variant="outline" type="button" className="flex items-center gap-2 text-sm">
+          <button
+            type="button"
+            className="filter-button"
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ 
+              borderRadius: "0.375rem",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 1rem",
+              height: "2.5rem",
+              width: "auto",
+              backgroundColor: "white",
+              color: "#1f2937",
+              border: "1px solid #e5e7eb",
+              fontWeight: 500,
+              textDecoration: "none",
+              boxSizing: "border-box",
+              transition: "all 0.2s ease"
+            }}
+          >
             <SlidersHorizontal className="h-4 w-4" />
-            Filter
-          </Button>
+            <span>Filter</span>
+          </button>
         )}
-        <Button 
+        <button 
           type="submit" 
-          disabled={isLoading} 
-          className={`${compact ? 'w-auto' : 'px-6'}`}
+          className="search-button"
+          disabled={isLoading}
+          style={{ 
+            borderRadius: "0.375rem",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
+            padding: "0 1.25rem",
+            height: "2.5rem",
+            width: "auto",
+            backgroundColor: "#2563eb",
+            color: "white",
+            border: "none",
+            fontWeight: 500,
+            textDecoration: "none",
+            boxSizing: "border-box",
+            transition: "all 0.2s ease"
+          }}
         >
-          {isLoading ? 'Suche...' : 'Suchen'}
-        </Button>
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Suche...</span>
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4" />
+              <span>Suchen</span>
+            </>
+          )}
+        </button>
       </div>
       
       {error && (
-        <div className="text-red-500 text-sm mt-2">{error}</div>
+        <Alert variant="destructive" className="mt-3">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
     </form>
   );

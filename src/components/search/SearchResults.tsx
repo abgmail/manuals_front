@@ -1,8 +1,7 @@
 "use client";
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Copy, Download, FileText, AlertCircle, Clock, Search, ExternalLink, Check } from 'lucide-react';
@@ -73,10 +72,10 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="flex flex-col items-center gap-2">
-          <Clock className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground">Suche läuft...</p>
+      <div className="flex justify-center items-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <Clock className="h-10 w-10 animate-spin text-primary/70" />
+          <p className="text-muted-foreground font-medium">Suche läuft...</p>
         </div>
       </div>
     );
@@ -84,18 +83,18 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
 
   if (error) {
     return (
-      <Alert variant="destructive" className="my-4">
+      <Alert variant="destructive" className="my-6 max-w-2xl mx-auto">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
+        <AlertDescription className="ml-2">{error}</AlertDescription>
       </Alert>
     );
   }
 
   if (results.length === 0) {
     return (
-      <div className="text-center py-12">
-        <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">Keine Ergebnisse gefunden</h3>
+      <div className="text-center py-16 max-w-md mx-auto">
+        <Search className="h-16 w-16 mx-auto text-muted-foreground mb-6 opacity-70" />
+        <h3 className="text-xl font-semibold mb-3">Keine Ergebnisse gefunden</h3>
         <p className="text-muted-foreground">
           Versuchen Sie es mit einem anderen Suchbegriff oder weniger Filtern.
         </p>
@@ -116,13 +115,13 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
             <div className="result-card-header">
               <h3 className="result-card-title">{hit.filename}</h3>
               
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center">
                   <span className="text-muted-foreground">Seiten:</span> 
                   <span className="font-medium ml-1">{hit.page_number}</span>
                 </div>
                 
-                <div>
+                <div className="flex items-center">
                   <span className="text-muted-foreground">Datum:</span> 
                   <span className="font-medium ml-1">{formatDate(hit.document_date)}</span>
                 </div>
@@ -130,11 +129,11 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
               
               <div className="result-card-meta">
                 {Array.isArray(hit.skus) && hit.skus.length > 0 ? hit.skus.map((sku: string, index: number) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="text-xs badge">
                     {sku}
                   </Badge>
                 )) : hit.skus ? (
-                  <Badge variant="outline" className="text-xs">{hit.skus}</Badge>
+                  <Badge variant="outline" className="text-xs badge">{hit.skus}</Badge>
                 ) : (
                   <span className="text-xs text-muted-foreground">-</span>
                 )}
@@ -145,7 +144,7 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
               {hit.tags && Array.isArray(hit.tags) && hit.tags.length > 0 && (
                 <div className="mb-2">
                   {hit.tags.map((tag: string, index: number) => (
-                    <Badge key={index} variant="secondary" className="mr-1 mb-1">
+                    <Badge key={index} variant="secondary" className="mr-1 mb-1 badge">
                       {tag}
                     </Badge>
                   ))}
@@ -154,28 +153,60 @@ export default function SearchResults({ query, filter }: SearchResultsProps) {
             </div>
             
             <div className="bg-muted/30 p-4 flex flex-row md:flex-col justify-end gap-2 border-t">
-              <Button variant="outline" size="sm" className="w-full flex items-center gap-2" asChild>
-                <a 
-                  href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>Vorschau</span>
-                </a>
-              </Button>
+              <a 
+                href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="preview-button"
+                style={{ 
+                  borderRadius: "0.375rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  height: "2.5rem",
+                  width: "100%",
+                  backgroundColor: "white",
+                  color: "#1f2937",
+                  border: "1px solid #e5e7eb",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                  boxSizing: "border-box",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Vorschau</span>
+              </a>
               
-              <Button variant="default" size="sm" className="w-full flex items-center gap-2" asChild>
-                <a 
-                  href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
-                  download 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Download</span>
-                </a>
-              </Button>
+              <a 
+                href={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
+                download 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="download-button"
+                style={{ 
+                  borderRadius: "0.375rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  height: "2.5rem",
+                  width: "100%",
+                  backgroundColor: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                  boxSizing: "border-box",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </a>
               
               <CopyLinkButton 
                 url={`${process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL}/${hit.filename}`} 
@@ -198,16 +229,33 @@ function CopyLinkButton({ url }: { url: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Fehler beim Kopieren in die Zwischenablage:', err);
+      console.error('Fehler beim Kopieren:', err);
     }
   };
   
   return (
-    <Button 
-      variant="outline" 
-      size="sm" 
-      className="w-full flex items-center gap-2" 
+    <button 
+      className={`copy-button ${copied ? 'copied' : ''}`}
       onClick={copyToClipboard}
+      type="button"
+      aria-label={copied ? "Link wurde kopiert" : "Link kopieren"}
+      style={{ 
+        borderRadius: "0.375rem",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 1rem",
+        height: "2.5rem",
+        width: "100%",
+        backgroundColor: "white",
+        color: copied ? "rgb(22, 163, 74)" : "#1f2937",
+        border: copied ? "1px solid rgba(34, 197, 94, 0.3)" : "1px solid #e5e7eb",
+        fontWeight: 500,
+        textDecoration: "none",
+        boxSizing: "border-box",
+        transition: "all 0.2s ease"
+      }}
     >
       {copied ? (
         <>
@@ -220,6 +268,6 @@ function CopyLinkButton({ url }: { url: string }) {
           <span>Link kopieren</span>
         </>
       )}
-    </Button>
+    </button>
   );
 }
